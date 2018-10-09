@@ -4,41 +4,25 @@
 int _volumePedalPin = A0;
 
 // Calibrated values
-int _minPositionValue = 0;
-int _maxPositionValue = 0;
-
-// Used for volume pedal resistance calculation
-float _dividerResistorValue = 1000;
-float _volumePedalResistanceValue = 0;
-float _volumePedalResistanceBuffer = 0;
-int _vIn = 1024;
-int _vOut = 0;
-
 short _maxNormalizedValue = 127;
 
-short normalize(float value) {
-	float step = (float)(_maxPositionValue - _minPositionValue) / (float)_maxNormalizedValue;
-	return (value - _minPositionValue) * step;
+Configuration *_currentConfiguration;
+
+unsigned short normalize(int value) {
+	//Serial.println("Value:");
+	Serial.println(value);
+	float step = (float)_maxNormalizedValue / (float)(_currentConfiguration->maxVolumePedalPosition 
+		- _currentConfiguration->minVolumePedalPosition);
+	return (value - _currentConfiguration->minVolumePedalPosition) * step;
 }
 
-float readVolumePedalValue() {
-	int rawValue = analogRead(_volumePedalPin);
-	_volumePedalResistanceBuffer = rawValue * _vIn;
-
-	_vOut = (_volumePedalResistanceBuffer) / 1024.0;
-	_volumePedalResistanceBuffer = (_vIn / _vOut) - 1;
-	_volumePedalResistanceValue = _dividerResistorValue * _volumePedalResistanceBuffer;
-	return _volumePedalResistanceValue;
+int VolumePedalInput::readVolumePedalValue() {
+	return analogRead(_volumePedalPin);
 }
 
-void VolumePedalInput::Configure(ConfigurationManager configurationManager)
+void VolumePedalInput::configure(ConfigurationManager configurationManager)
 {
-	Configuration *currentConfiguration = &configurationManager.CurrentConfiguration;
-
-	if (currentConfiguration->IsVolumePedalCalibrated && currentConfiguration->IsVolumePedalEnabled) {
-		_minPositionValue = currentConfiguration->MinVolumePedalPosition;
-		_maxPositionValue = currentConfiguration->MaxVolumePedalPosition;
-	}
+	_currentConfiguration = &configurationManager.currentConfiguration;
 }
 
 short VolumePedalInput::getNormalizedValue()
@@ -48,12 +32,12 @@ short VolumePedalInput::getNormalizedValue()
 
 void VolumePedalInput::setMaxValueFromCurrentPosition()
 {
-	_maxPositionValue = readVolumePedalValue();
+	_currentConfiguration->maxVolumePedalPosition = readVolumePedalValue();
 }
 
 void VolumePedalInput::setMinValueFromCurrentPosition()
 {
-	_minPositionValue = readVolumePedalValue();
+	_currentConfiguration->minVolumePedalPosition = readVolumePedalValue();
 }
 
 VolumePedalInput::VolumePedalInput()

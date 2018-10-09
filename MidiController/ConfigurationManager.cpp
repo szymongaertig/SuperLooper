@@ -2,10 +2,19 @@
 #include <EEPROM.h>
 #include <Arduino.h>
 #include "SwitchMap.h"
+
 void clearEeprom() {
 	for (int i = 0; i < EEPROM.length(); i++) {
 		EEPROM.write(i, 0);
 	}
+}
+
+void ConfigurationManager::selectPrevBank()
+{
+}
+
+void ConfigurationManager::selectNextBank()
+{
 }
 
 void ConfigurationManager::initConfigurationIfNeeded(short firmwareVersion)
@@ -13,15 +22,17 @@ void ConfigurationManager::initConfigurationIfNeeded(short firmwareVersion)
 	Configuration configurationFromMemory;
 	EEPROM.get(0, configurationFromMemory);
 
-	if (configurationFromMemory.FirmwareVersion != firmwareVersion) {
-
-		CurrentConfiguration = createInitialConfigurationStruct(firmwareVersion);
+	if (configurationFromMemory.firmwareVersion != firmwareVersion) {
+		currentConfiguration = createInitialConfigurationStruct(firmwareVersion);
 		clearEeprom();
-		EEPROM.put(0, CurrentConfiguration);
+		EEPROM.put(0, currentConfiguration);
 	}
 	else {
-		CurrentConfiguration = configurationFromMemory;
+		currentConfiguration = configurationFromMemory;
 	}
+
+	_activeBankIndex = 0;
+	activeBank = &currentConfiguration.banks[_activeBankIndex];
 }
 
 ConfigurationManager::ConfigurationManager()
@@ -36,39 +47,65 @@ ConfigurationManager::~ConfigurationManager()
 Configuration ConfigurationManager::createInitialConfigurationStruct(short firmwareVersion)
 {
 	Configuration result;
-	result.FirmwareVersion = firmwareVersion;
+	result.firmwareVersion = firmwareVersion;
 
-	// Switch map
-	result.SwitchMap[0].Function = SwitchFunction::BankDown;
-	result.SwitchMap[0].ReadOnly = true;
+	// Banks
+	for (short bankIndex = 0; bankIndex < NumberOfBanks; bankIndex++) {
+		BankConfiguration *currentBank = &result.banks[bankIndex];
 
-	result.SwitchMap[1].Function = SwitchFunction::BankUp;
-	result.SwitchMap[1].ReadOnly = true;
+		String bankName = "Bank " + (bankIndex + 1);
+		bankName.toCharArray(currentBank->name, BankNameLenght, 0);
 
-	result.SwitchMap[2].Function = SwitchFunction::LoopToogle;
-	result.SwitchMap[2].FunctionParameter = 2;
-	result.SwitchMap[2].ReadOnly = false;
+		currentBank->activeInput = 0;
+		currentBank->tempo = 120;
 
-	result.SwitchMap[3].Function = SwitchFunction::LoopToogle;
-	result.SwitchMap[3].FunctionParameter = 3;
-	result.SwitchMap[3].ReadOnly = false;
+		currentBank->footSwitches[0] = true;
+		currentBank->footSwitches[1] = false;
+		
+		// Foot switches
+		currentBank->loops[0] = true;
+		currentBank->loops[1] = true;
+		currentBank->loops[2] = true;
+		currentBank->loops[3] = true;
+		currentBank->loops[4] = true;
+		currentBank->loops[5] = true;
+		currentBank->loops[6] = true;
+		currentBank->loops[7] = true;
 
-	result.SwitchMap[4].Function = SwitchFunction::LoopToogle;
-	result.SwitchMap[4].FunctionParameter = 4;
-	result.SwitchMap[4].ReadOnly = false;
+		// Switch map
+		currentBank->switchMap[0].Function = SwitchFunction::BankDown;
+		currentBank->switchMap[0].ReadOnly = true;
 
-	result.SwitchMap[5].Function = SwitchFunction::LoopToogle;
-	result.SwitchMap[5].FunctionParameter = 5;
-	result.SwitchMap[5].ReadOnly = false;
+		currentBank->switchMap[1].Function = SwitchFunction::BankUp;
+		currentBank->switchMap[1].ReadOnly = true;
 
-	result.SwitchMap[6].Function = SwitchFunction::TapTempoTrigger;
-	result.SwitchMap[6].ReadOnly = false;
+		currentBank->switchMap[2].Function = SwitchFunction::LoopToogle;
+		currentBank->switchMap[2].FunctionParameter = 0;
+		currentBank->switchMap[2].ReadOnly = false;
+
+		currentBank->switchMap[3].Function = SwitchFunction::LoopToogle;
+		currentBank->switchMap[3].FunctionParameter = 1;
+		currentBank->switchMap[3].ReadOnly = false;
+
+		currentBank->switchMap[4].Function = SwitchFunction::LoopToogle;
+		currentBank->switchMap[4].FunctionParameter = 2;
+		currentBank->switchMap[4].ReadOnly = false;
+
+		currentBank->switchMap[5].Function = SwitchFunction::LoopToogle;
+		currentBank->switchMap[5].FunctionParameter = 3;
+		currentBank->switchMap[5].ReadOnly = false;
+
+		currentBank->switchMap[6].Function = SwitchFunction::TapTempoTrigger;
+		currentBank->switchMap[6].ReadOnly = false;
+	}
 
 	// volume pedal
-	result.IsVolumePedalCalibrated = false;
-	result.IsVolumePedalEnabled = false;
-	result.MaxVolumePedalPosition = 0;
-	result.MinVolumePedalPosition = 0;
+	result.isVolumePedalCalibrated = true;
+	result.isVolumePedalEnabled = true;
+	result.maxVolumePedalPosition = 928;
+	result.minVolumePedalPosition = 464;
+
+	result.mute = false;
 
 	return result;
 }

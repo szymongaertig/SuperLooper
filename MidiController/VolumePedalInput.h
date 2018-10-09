@@ -4,11 +4,13 @@
 class VolumePedalInput
 {
 public:
-	void Configure(ConfigurationManager configurationManager);
+	void configure(ConfigurationManager configurationManager);
 	short getNormalizedValue();
 	void setMaxValueFromCurrentPosition();
 	void setMinValueFromCurrentPosition();
 	VolumePedalInput();
 	~VolumePedalInput();
+private:
+	int readVolumePedalValue();
 };
 

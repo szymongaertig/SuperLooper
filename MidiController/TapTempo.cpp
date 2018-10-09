@@ -1,36 +1,40 @@
 #include "TapTempo.h"
-#include <Arduino.h>
 
 const int _milsForMinute = 60 * 1000;
 
-void TapTempo::ResetTaps()
+void TapTempo::resetTaps()
 {
 	_tapsTimeSum = 0;
 	_numberOfTaps = 0;
 }
 
-void TapTempo::RegisterTapAction(unsigned long actionTime)
+int TapTempo::getCurrentTempo()
 {
-	_numberOfTaps++;
+	return _currentTempo;
+}
 
-	if (_numberOfTaps > 1) {
+void TapTempo::registerTapAction(unsigned long actionTime)
+{
+	if (_numberOfTaps > 0) {
 		int currentTimeDiff = actionTime - _lastTapTime;
+		
+		// prevent to big difference between measuremets
 		int averageTapsDiff = getAverageTapDiff();
 
-		// prevent to big difference between measuremets
-		if (actionTime > averageTapsDiff * 2 || actionTime < averageTapsDiff / 2) {
-			ResetTaps();
-			_numberOfTaps = 1;
+		if (currentTimeDiff > averageTapsDiff * 2 
+			|| currentTimeDiff < averageTapsDiff / 2) {
+			resetTaps();
+			_numberOfTaps = 0;
 		}
 		_tapsTimeSum += currentTimeDiff;
 	}
 
-	_lastTapTime = actionTime;
+	_numberOfTaps++;
 
 	int averageTapsDiff = getAverageTapDiff();
-	if (averageTapsDiff > 0) {
-		CalculateCurrentTempo(averageTapsDiff);
-	}
+	calculateCurrentTempo(averageTapsDiff);
+
+	_lastTapTime = actionTime;
 }
 
 TapTempo::TapTempo()
@@ -47,12 +51,17 @@ int TapTempo::getAverageTapDiff()
 	if (_numberOfTaps < 2) {
 		return 0;
 	}
-
-	return _tapsTimeSum / _numberOfTaps;
+	
+	return _tapsTimeSum / (_numberOfTaps-1);
 }
 
-void TapTempo::CalculateCurrentTempo(int averageTapDiff)
+void TapTempo::calculateCurrentTempo(int averageTapDiff)
 {
-	CurrentTempo = _milsForMinute / averageTapDiff;
+	if (_numberOfTaps > 1) {
+		_currentTempo = _milsForMinute / averageTapDiff;
+	}
+	else {
+		_currentTempo = 0;
+	}
 }
 

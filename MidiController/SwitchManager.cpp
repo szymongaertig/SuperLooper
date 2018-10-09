@@ -1,29 +1,28 @@
 #include "SwitchManager.h"
 #include <Arduino.h>
 
-int _switch1Pin = 6;
-int _switch2Pin = 7;
-int _switch3Pin = 8;
-int _switch4Pin = 9;
-int _switch5Pin = 10;
-int _switch6Pin = 11;
-int _switch7Pin = 12;
+int _numberOfSwitchPins = 7;
 
-void SwitchManager::Configure(ConfigurationManager configurationManager)
+int _switchPins[7] = {
+	6,7,8,9,10,11,12
+};
+
+void SwitchManager::configure(ConfigurationManager configurationManager)
 {
-	_configurationManager = configurationManager;
+	_configurationManager = &configurationManager;
 }
 
-DetectedSwitch * SwitchManager::GetActiveSwitch()
+DetectedSwitch * SwitchManager::getActiveSwitch()
 {
 	DetectedSwitch result;
 	result.ActionTime = millis();
-	int activeSwitch = DetectActiveSwitchId();
+	int activeSwitch = detectActiveSwitchId();
 
 	if (activeSwitch > 0) {
-		SwitchMap currentSwitch = _configurationManager.CurrentConfiguration.SwitchMap[activeSwitch];
-		result.Function = currentSwitch.Function;
-		result.FunctionParameter = currentSwitch.FunctionParameter;
+		SwitchMap *currentSwitch = _configurationManager->activeBank->switchMap;
+
+		result.Function = currentSwitch->Function;
+		result.FunctionParameter = currentSwitch->FunctionParameter;
 
 		return &result;
 	}
@@ -33,41 +32,22 @@ DetectedSwitch * SwitchManager::GetActiveSwitch()
 
 SwitchManager::SwitchManager()
 {
-	pinMode(_switch1Pin, OUTPUT);
-	pinMode(_switch2Pin, OUTPUT);
-	pinMode(_switch3Pin, OUTPUT);
-	pinMode(_switch4Pin, OUTPUT);
-	pinMode(_switch5Pin, OUTPUT);
-	pinMode(_switch6Pin, OUTPUT);
-	pinMode(_switch7Pin, OUTPUT);
+	for (short index = 0; index < _numberOfSwitchPins; index++) {
+		pinMode(_switchPins[index], OUTPUT);
+	}
 }
 
 SwitchManager::~SwitchManager()
 {
 }
 
-short SwitchManager::DetectActiveSwitchId()
+short SwitchManager::detectActiveSwitchId()
 {
-	if (digitalRead(_switch1Pin) == 1) {
-		return 1;
+	for (short switchIndex = 0; switchIndex < _numberOfSwitchPins; switchIndex++) {
+		if (digitalRead(switchIndex) == 1) {
+			return switchIndex;
+		}
 	}
-	if (digitalRead(_switch2Pin) == 1) {
-		return 2;
-	}
-	if (digitalRead(_switch3Pin) == 1) {
-		return 3;
-	}
-	if (digitalRead(_switch4Pin) == 1) {
-		return 4;
-	}
-	if (digitalRead(_switch5Pin) == 1) {
-		return 5;
-	}
-	if (digitalRead(_switch6Pin) == 1) {
-		return 6;
-	}
-	if (digitalRead(_switch7Pin) == 1) {
-		return 7;
-	}
+
 	return -1;
 }

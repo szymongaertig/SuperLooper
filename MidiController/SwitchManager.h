@@ -5,12 +5,12 @@
 class SwitchManager
 {
 public:
-	void Configure(ConfigurationManager configurationManager);
-	DetectedSwitch * GetActiveSwitch();
+	void configure(ConfigurationManager configurationManager);
+	DetectedSwitch * getActiveSwitch();
 	SwitchManager();
 	~SwitchManager();
 private: 
-	ConfigurationManager  _configurationManager;
-	short DetectActiveSwitchId();
+	ConfigurationManager  *_configurationManager;
+	short detectActiveSwitchId();
 };
 
