@@ -11,10 +11,24 @@ void clearEeprom() {
 
 void ConfigurationManager::selectPrevBank()
 {
+	if (_activeBankIndex > 0) {
+		_activeBankIndex--;
+	}
+	else {
+		_activeBankIndex = NumberOfBanks - 1;
+	}
+	activeBank = &currentConfiguration.banks[_activeBankIndex];
 }
 
 void ConfigurationManager::selectNextBank()
 {
+	if (_activeBankIndex < NumberOfBanks - 1) {
+		_activeBankIndex++;
+	}
+	else {
+		_activeBankIndex = 0;
+	}
+	activeBank = &currentConfiguration.banks[_activeBankIndex];
 }
 
 void ConfigurationManager::initConfigurationIfNeeded(short firmwareVersion)
@@ -49,6 +63,11 @@ Configuration ConfigurationManager::createInitialConfigurationStruct(short firmw
 	Configuration result;
 	result.firmwareVersion = firmwareVersion;
 
+	for (short loopIndex = 0; loopIndex < 8; loopIndex++) {
+		String loopName = "Loop " + (loopIndex + 1);
+		loopName.toCharArray(result.loopNames[loopIndex][0], 10, 0);
+	}
+
 	// Banks
 	for (short bankIndex = 0; bankIndex < NumberOfBanks; bankIndex++) {
 		BankConfiguration *currentBank = &result.banks[bankIndex];
@@ -61,7 +80,7 @@ Configuration ConfigurationManager::createInitialConfigurationStruct(short firmw
 
 		currentBank->footSwitches[0] = true;
 		currentBank->footSwitches[1] = false;
-		
+
 		// Foot switches
 		currentBank->loops[0] = true;
 		currentBank->loops[1] = true;

@@ -1,3 +1,4 @@
+
 #include "SwitchManager.h"
 #include <Arduino.h>
 
@@ -24,6 +25,8 @@ DetectedSwitch * SwitchManager::getActiveSwitch()
 		result.Function = currentSwitch->Function;
 		result.FunctionParameter = currentSwitch->FunctionParameter;
 
+		Serial.write("Switch detected");
+		
 		return &result;
 	}
 

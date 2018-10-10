@@ -24,6 +24,7 @@ public:
 	int minVolumePedalPosition;
 	bool mute;
 	BankConfiguration banks[NumberOfBanks];
+	char* loopNames[8][10];
 };
 
 class ConfigurationManager

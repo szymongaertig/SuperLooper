@@ -1,8 +1,9 @@
+#include "ConfigurationManager.h"
 #pragma once
 class LedsManager
 {
 public:
-	void refreshLeds(Configuration *currentConfiguration);
+	void RefreshLeds(ConfigurationManager *configurationManager);
 	LedsManager();
 	~LedsManager();
 };
